@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { VehicleType } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requirePermission, requireTenant, handleApiError } from "@/lib/api-utils";
 import { PERMISSIONS } from "@/lib/permissions";

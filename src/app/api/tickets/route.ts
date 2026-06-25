@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { TicketStatus, VehicleType } from "@prisma/client";
+import { TicketStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireAuth, requireTenant, handleApiError, ApiError } from "@/lib/api-utils";
 import { PERMISSIONS, hasPermission } from "@/lib/permissions";
@@ -36,7 +36,7 @@ export async function GET(req: NextRequest) {
 
     if (status) where.status = status as TicketStatus;
     if (paymentStatus) where.paymentStatus = paymentStatus;
-    if (vehicleType) where.vehicleType = vehicleType as VehicleType;
+    if (vehicleType) where.vehicleType = vehicleType;
 
     if (search) {
       where.OR = [
@@ -93,7 +93,7 @@ export async function POST(req: NextRequest) {
     const formData = await req.formData();
 
     const plate = (formData.get("plate") as string)?.trim().toUpperCase();
-    const vehicleType = formData.get("vehicleType") as VehicleType;
+    const vehicleType = formData.get("vehicleType") as string;
     const photo = formData.get("photo") as File | null;
 
     if (!plate || !vehicleType) {

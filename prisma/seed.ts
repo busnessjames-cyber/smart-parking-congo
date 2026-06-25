@@ -1,4 +1,4 @@
-import { PrismaClient, Role, VehicleType } from "@prisma/client";
+import { PrismaClient, Role } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
@@ -13,7 +13,7 @@ const DEFAULT_RATES = {
 async function main() {
   console.log("🌱 Seeding database...");
 
-  const superAdminPassword = await bcrypt.hash("superadmin123", 12);
+  const superAdminPassword = await bcrypt.hash("JesusChrist@@123", 12);
 
   const superAdmin = await prisma.user.upsert({
     where: { email: "superadmin@smartparking.cg" },
@@ -88,13 +88,13 @@ async function main() {
       where: {
         tenantId_vehicleType: {
           tenantId: "park_001",
-          vehicleType: type as VehicleType,
+          vehicleType: type,
         },
       },
       update: { amount },
       create: {
         tenantId: "park_001",
-        vehicleType: type as VehicleType,
+        vehicleType: type,
         amount,
       },
     });
@@ -132,13 +132,13 @@ async function main() {
       where: {
         tenantId_vehicleType: {
           tenantId: "park_002",
-          vehicleType: type as VehicleType,
+          vehicleType: type,
         },
       },
       update: { amount },
       create: {
         tenantId: "park_002",
-        vehicleType: type as VehicleType,
+        vehicleType: type,
         amount,
       },
     });
@@ -147,7 +147,7 @@ async function main() {
   console.log("✅ Parking B (park_002) créé");
 
   console.log("\n📋 Comptes de test:");
-  console.log("  Super Admin: superadmin@smartparking.cg / superadmin123");
+  console.log("  Super Admin: superadmin@smartparking.cg / JesusChrist@@123");
   console.log("  Admin park_001: admin@park001.cg / admin123");
   console.log("  Superviseur: supervisor@park001.cg / admin123");
   console.log("  Agent: agent@park001.cg / admin123");

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-import { Role, VehicleType } from "@prisma/client";
+import { Role } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireRole, handleApiError } from "@/lib/api-utils";
 import { logAudit } from "@/lib/audit";
@@ -75,7 +75,7 @@ export async function POST(req: NextRequest) {
         await tx.rate.create({
           data: {
             tenantId,
-            vehicleType: type as VehicleType,
+            vehicleType: type,
             amount,
           },
         });

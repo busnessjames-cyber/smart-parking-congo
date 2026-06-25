@@ -14,13 +14,6 @@ enum Role {
   AGENT
 }
 
-enum VehicleType {
-  MOTO
-  VOITURE
-  CAMION
-  BUS
-}
-
 enum TicketStatus {
   INSIDE
   CLOSED
@@ -102,13 +95,13 @@ model User {
 }
 
 model Rate {
-  id          String      @id @default(cuid())
+  id          String   @id @default(cuid())
   tenantId    String
-  vehicleType VehicleType
-  amount      Int         // in FCFA
-  isActive    Boolean     @default(true)
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  vehicleType String
+  amount      Int      // in FCFA
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   parking Parking @relation(fields: [tenantId], references: [tenantId])
 
@@ -133,7 +126,7 @@ model Ticket {
   tenantId      String
   ticketNumber  String        // PK-CG-2026-000001
   plate         String
-  vehicleType   VehicleType
+  vehicleType   String
   rateAmount    Int           // frozen at entry time
   photoUrl      String?
   status        TicketStatus  @default(INSIDE)

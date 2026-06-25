@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
@@ -9,17 +9,13 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/lib/use-toast";
 import { Camera, CheckCircle, Printer } from "lucide-react";
 import { formatCurrency } from "@/lib/audit";
-
-const VEHICLE_TYPES = [
-  { value: "MOTO", label: "Moto - 500 FCFA" },
-  { value: "VOITURE", label: "Voiture - 1000 FCFA" },
-  { value: "CAMION", label: "Camion - 2000 FCFA" },
-  { value: "BUS", label: "Bus - 3000 FCFA" },
-];
+import { VEHICLE_TYPE_LABELS } from "@/lib/permissions";
 
 export default function EntryPage() {
   const [plate, setPlate] = useState("");
-  const [vehicleType, setVehicleType] = useState("VOITURE");
+  const [vehicleType, setVehicleType] = useState("");
+  const [vehicleTypes, setVehicleTypes] = useState<{ value: string; label: string }[]>([]);
+  const [ratesLoaded, setRatesLoaded] = useState(false);
   const [photo, setPhoto] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [ocrLoading, setOcrLoading] = useState(false);
@@ -30,6 +26,20 @@ export default function EntryPage() {
     ticketNumber: string;
     rateAmount: number;
   } | null>(null);
+  useEffect(() => {
+    fetch("/api/rates")
+      .then((r) => r.json())
+      .then((data: { vehicleType: string; amount: number }[]) => {
+        const types = data.map((r) => ({
+          value: r.vehicleType,
+          label: `${VEHICLE_TYPE_LABELS[r.vehicleType] || r.vehicleType} - ${formatCurrency(r.amount)}`,
+        }));
+        setVehicleTypes(types);
+        if (types.length > 0) setVehicleType(types[0].value);
+        setRatesLoaded(true);
+      });
+  }, []);
+
   const fileRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
@@ -154,7 +164,8 @@ export default function EntryPage() {
               label="Type de véhicule"
               value={vehicleType}
               onChange={(e) => setVehicleType(e.target.value)}
-              options={VEHICLE_TYPES}
+              options={vehicleTypes}
+              disabled={!ratesLoaded}
             />
 
             {error && (
