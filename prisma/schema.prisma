@@ -1,0 +1,192 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  SUPER_ADMIN
+  ADMIN
+  SUPERVISOR
+  AGENT
+}
+
+enum VehicleType {
+  MOTO
+  VOITURE
+  CAMION
+  BUS
+}
+
+enum TicketStatus {
+  INSIDE
+  CLOSED
+}
+
+enum PaymentStatus {
+  UNPAID
+  PAID
+}
+
+enum AuditAction {
+  LOGIN
+  LOGOUT
+  CREATE_TICKET
+  AUTHORIZE_EXIT
+  CREATE_PAYMENT
+  UPDATE_RATE
+  CREATE_USER
+  UPDATE_USER
+  DELETE_USER
+  CREATE_PARKING
+  UPDATE_PARKING
+  UPDATE_SETTINGS
+}
+
+// Tenant = Parking
+model Parking {
+  id        String   @id @default(cuid())
+  tenantId  String   @unique // e.g. park_001
+  name      String
+  address   String?
+  city      String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users         User[]
+  rates         Rate[]
+  tickets       Ticket[]
+  ticketCounters TicketCounter[]
+  auditLogs     AuditLog[]
+  settings      ParkingSettings?
+
+  @@index([tenantId])
+}
+
+model ParkingSettings {
+  id              String  @id @default(cuid())
+  tenantId        String  @unique
+  ticketPrefix    String  @default("PK-CG")
+  currency        String  @default("FCFA")
+  whatsappEnabled Boolean @default(true)
+
+  parking Parking @relation(fields: [tenantId], references: [tenantId])
+
+  @@index([tenantId])
+}
+
+model User {
+  id        String   @id @default(cuid())
+  tenantId  String?  // null for SUPER_ADMIN
+  email     String   @unique
+  password  String
+  firstName String
+  lastName  String
+  role      Role
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  parking          Parking?  @relation(fields: [tenantId], references: [tenantId])
+  entryTickets     Ticket[]  @relation("EntryAgent")
+  exitTickets      Ticket[]  @relation("ExitAgent")
+  payments         Payment[]
+  auditLogs        AuditLog[]
+
+  @@index([tenantId])
+  @@index([email])
+}
+
+model Rate {
+  id          String      @id @default(cuid())
+  tenantId    String
+  vehicleType VehicleType
+  amount      Int         // in FCFA
+  isActive    Boolean     @default(true)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  parking Parking @relation(fields: [tenantId], references: [tenantId])
+
+  @@unique([tenantId, vehicleType])
+  @@index([tenantId])
+}
+
+model TicketCounter {
+  id        String @id @default(cuid())
+  tenantId  String
+  year      Int
+  counter   Int    @default(0)
+
+  parking Parking @relation(fields: [tenantId], references: [tenantId])
+
+  @@unique([tenantId, year])
+  @@index([tenantId])
+}
+
+model Ticket {
+  id            String        @id @default(cuid())
+  tenantId      String
+  ticketNumber  String        // PK-CG-2026-000001
+  plate         String
+  vehicleType   VehicleType
+  rateAmount    Int           // frozen at entry time
+  photoUrl      String?
+  status        TicketStatus  @default(INSIDE)
+  paymentStatus PaymentStatus @default(UNPAID)
+  entryDate     DateTime      @default(now())
+  entryAgentId  String
+  exitDate      DateTime?
+  exitAgentId   String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  parking    Parking  @relation(fields: [tenantId], references: [tenantId])
+  entryAgent User     @relation("EntryAgent", fields: [entryAgentId], references: [id])
+  exitAgent  User?    @relation("ExitAgent", fields: [exitAgentId], references: [id])
+  payment    Payment?
+
+  @@unique([tenantId, ticketNumber])
+  @@index([tenantId])
+  @@index([tenantId, plate])
+  @@index([tenantId, status])
+  @@index([tenantId, entryDate])
+}
+
+model Payment {
+  id        String   @id @default(cuid())
+  tenantId  String
+  ticketId  String   @unique
+  amount    Int
+  agentId   String
+  paidAt    DateTime @default(now())
+  createdAt DateTime @default(now())
+
+  ticket Ticket @relation(fields: [ticketId], references: [id])
+  agent  User   @relation(fields: [agentId], references: [id])
+
+  @@index([tenantId])
+  @@index([tenantId, paidAt])
+}
+
+model AuditLog {
+  id         String      @id @default(cuid())
+  tenantId   String?     // null for super admin actions
+  userId     String
+  action     AuditAction
+  entityType String?     // Ticket, User, Rate, etc.
+  entityId   String?
+  details    String?     // JSON string for extra info
+  createdAt  DateTime    @default(now())
+
+  parking Parking? @relation(fields: [tenantId], references: [tenantId])
+  user    User     @relation(fields: [userId], references: [id])
+
+  @@index([tenantId])
+  @@index([tenantId, createdAt])
+  @@index([userId])
+}
