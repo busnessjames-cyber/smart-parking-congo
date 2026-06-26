@@ -137,9 +137,29 @@ export default function SuperAdminPage() {
                   <td className="px-4 py-3 text-gray-900 dark:text-gray-100">{p._count.users}</td>
                   <td className="px-4 py-3 text-gray-900 dark:text-gray-100">{p._count.tickets}</td>
                   <td className="px-4 py-3">
-                    <Badge variant={p.isActive ? "success" : "danger"}>
+                    <button
+                      onClick={async () => {
+                        const res = await fetch(`/api/parkings/${p.id}`, {
+                          method: "PATCH",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ isActive: !p.isActive }),
+                        });
+                        if (res.ok) {
+                          toast(`Parking ${p.isActive ? "désactivé" : "activé"}`, "success");
+                          loadParkings();
+                        } else {
+                          const data = await res.json();
+                          toast(data.error || "Erreur", "error");
+                        }
+                      }}
+                      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+                        p.isActive
+                          ? "bg-green-100 text-green-700 hover:bg-red-100 hover:text-red-700 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-red-900/30 dark:hover:text-red-400"
+                          : "bg-red-100 text-red-700 hover:bg-green-100 hover:text-green-700 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-green-900/30 dark:hover:text-green-400"
+                      }`}
+                    >
                       {p.isActive ? "Actif" : "Inactif"}
-                    </Badge>
+                    </button>
                   </td>
                 </tr>
               ))}

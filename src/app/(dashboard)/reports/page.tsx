@@ -35,8 +35,8 @@ interface ReportSummary {
   unpaidTickets: number;
 }
 
-const statusBadge = (s: string) => <Badge variant={s === "INSIDE" ? "info" : "default"}>{s}</Badge>;
-const paymentBadge = (s: string) => <Badge variant={s === "PAID" ? "success" : "danger"}>{s}</Badge>;
+const statusBadge = (s: string) => <Badge variant={s === "INSIDE" ? "info" : "default"}>{s === "INSIDE" ? "Présent" : "Terminé"}</Badge>;
+const paymentBadge = (s: string) => <Badge variant={s === "PAID" ? "success" : "danger"}>{s === "PAID" ? "Payé" : "Non payé"}</Badge>;
 
 export default function ReportsPage() {
   const [filters, setFilters] = useState({

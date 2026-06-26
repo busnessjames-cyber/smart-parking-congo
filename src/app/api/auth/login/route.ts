@@ -26,6 +26,16 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    if (user.tenantId) {
+      const parking = await prisma.parking.findUnique({ where: { tenantId: user.tenantId } });
+      if (!parking || !parking.isActive) {
+        return NextResponse.json(
+          { error: "Parking désactivé. Contactez l'administrateur." },
+          { status: 403 }
+        );
+      }
+    }
+
     const valid = await bcrypt.compare(password, user.password);
     if (!valid) {
       return NextResponse.json(

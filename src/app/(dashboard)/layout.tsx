@@ -1,5 +1,6 @@
 import { getSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import { prisma } from "@/lib/prisma";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Role } from "@prisma/client";
 
@@ -16,6 +17,13 @@ export default async function DashboardLayout({
 
   if (user.role === Role.SUPER_ADMIN) {
     redirect("/super-admin");
+  }
+
+  if (user.tenantId) {
+    const parking = await prisma.parking.findUnique({ where: { tenantId: user.tenantId } });
+    if (!parking?.isActive) {
+      redirect("/login?parking_inactive=1");
+    }
   }
 
   return (

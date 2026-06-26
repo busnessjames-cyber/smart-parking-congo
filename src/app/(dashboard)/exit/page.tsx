@@ -172,13 +172,13 @@ export default function ExitPage() {
               <p className="text-sm">
                 <span className="font-medium text-gray-500 dark:text-gray-400">Statut:</span>{" "}
                 <Badge variant={ticket.status === "INSIDE" ? "info" : "default"}>
-                  {ticket.status}
+                  {ticket.status === "INSIDE" ? "Présent" : ticket.status === "CLOSED" ? "Terminé" : ticket.status}
                 </Badge>
               </p>
               <p className="text-sm">
                 <span className="font-medium text-gray-500 dark:text-gray-400">Paiement:</span>{" "}
                 <Badge variant={ticket.paymentStatus === "PAID" ? "success" : "danger"}>
-                  {ticket.paymentStatus}
+                  {ticket.paymentStatus === "PAID" ? "Payé" : "Non payé"}
                 </Badge>
               </p>
               {ticket.exitDate && (

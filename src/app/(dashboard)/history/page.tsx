@@ -121,12 +121,12 @@ export default function HistoryPage() {
                     </td>
                     <td className="px-4 py-3">
                       <Badge variant={t.status === "INSIDE" ? "info" : "default"}>
-                        {t.status}
+                        {t.status === "INSIDE" ? "Présent" : "Terminé"}
                       </Badge>
                     </td>
                     <td className="px-4 py-3">
                       <Badge variant={t.paymentStatus === "PAID" ? "success" : "danger"}>
-                        {t.paymentStatus}
+                        {t.paymentStatus === "PAID" ? "Payé" : "Non payé"}
                       </Badge>
                     </td>
                   </tr>
