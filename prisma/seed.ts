@@ -1,4 +1,4 @@
-import { PrismaClient, Role } from "@prisma/client";
+import { PrismaClient, Role, VehicleType } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
@@ -88,13 +88,13 @@ async function main() {
       where: {
         tenantId_vehicleType: {
           tenantId: "park_001",
-          vehicleType: type,
+          vehicleType: type as VehicleType,
         },
       },
       update: { amount },
       create: {
         tenantId: "park_001",
-        vehicleType: type,
+        vehicleType: type as VehicleType,
         amount,
       },
     });
@@ -132,13 +132,13 @@ async function main() {
       where: {
         tenantId_vehicleType: {
           tenantId: "park_002",
-          vehicleType: type,
+          vehicleType: type as VehicleType,
         },
       },
       update: { amount },
       create: {
         tenantId: "park_002",
-        vehicleType: type,
+        vehicleType: type as VehicleType,
         amount,
       },
     });

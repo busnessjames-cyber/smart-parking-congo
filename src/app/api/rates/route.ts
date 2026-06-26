@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
+import { VehicleType } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requirePermission, requireTenant, handleApiError } from "@/lib/api-utils";
 import { PERMISSIONS } from "@/lib/permissions";
 import { logAudit } from "@/lib/audit";
 import { AuditAction } from "@prisma/client";
+
+const VALID_VEHICLE_TYPES = Object.values(VehicleType);
 
 export async function GET() {
   try {
@@ -31,8 +34,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Type et montant requis" }, { status: 400 });
     }
 
+    if (!VALID_VEHICLE_TYPES.includes(vehicleType)) {
+      return NextResponse.json({ error: "Type de véhicule invalide" }, { status: 400 });
+    }
+
     const existing = await prisma.rate.findUnique({
-      where: { tenantId_vehicleType: { tenantId, vehicleType } },
+      where: { tenantId_vehicleType: { tenantId, vehicleType: vehicleType as VehicleType } },
     });
     if (existing) {
       return NextResponse.json({ error: "Ce type de véhicule existe déjà" }, { status: 409 });
@@ -41,7 +48,7 @@ export async function POST(req: NextRequest) {
     const rate = await prisma.rate.create({
       data: {
         tenantId,
-        vehicleType,
+        vehicleType: vehicleType as VehicleType,
         amount: Number(amount),
       },
     });
@@ -71,17 +78,21 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ error: "Type et montant requis" }, { status: 400 });
     }
 
+    if (!VALID_VEHICLE_TYPES.includes(vehicleType)) {
+      return NextResponse.json({ error: "Type de véhicule invalide" }, { status: 400 });
+    }
+
     const rate = await prisma.rate.upsert({
       where: {
         tenantId_vehicleType: {
           tenantId,
-          vehicleType,
+          vehicleType: vehicleType as VehicleType,
         },
       },
       update: { amount: Number(amount) },
       create: {
         tenantId,
-        vehicleType,
+        vehicleType: vehicleType as VehicleType,
         amount: Number(amount),
       },
     });
@@ -111,8 +122,12 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ error: "Type de véhicule requis" }, { status: 400 });
     }
 
+    if (!VALID_VEHICLE_TYPES.includes(vehicleType)) {
+      return NextResponse.json({ error: "Type de véhicule invalide" }, { status: 400 });
+    }
+
     await prisma.rate.delete({
-      where: { tenantId_vehicleType: { tenantId, vehicleType } },
+      where: { tenantId_vehicleType: { tenantId, vehicleType: vehicleType as VehicleType } },
     });
 
     await logAudit({

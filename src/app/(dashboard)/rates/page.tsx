@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/card";
 import { useToast } from "@/lib/use-toast";
 import { VEHICLE_TYPE_LABELS } from "@/lib/permissions";
 import { formatCurrency } from "@/lib/audit";
+import { Select } from "@/components/ui/select";
 import { Save, Trash2, Plus } from "lucide-react";
 
 interface Rate {
@@ -18,7 +19,7 @@ interface Rate {
 export default function RatesPage() {
   const [rates, setRates] = useState<Rate[]>([]);
   const [editing, setEditing] = useState<Record<string, number>>({});
-  const [newType, setNewType] = useState("");
+  const [newType, setNewType] = useState("MOTO");
   const [newAmount, setNewAmount] = useState("");
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
@@ -62,16 +63,16 @@ export default function RatesPage() {
   };
 
   const handleAdd = async () => {
-    if (!newType.trim() || !newAmount) return;
+    if (!newAmount) return;
     setLoading(true);
     const res = await fetch("/api/rates", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ vehicleType: newType.trim().toUpperCase(), amount: Number(newAmount) }),
+      body: JSON.stringify({ vehicleType: newType, amount: Number(newAmount) }),
     });
     const data = await res.json();
     if (res.ok) {
-      toast(`Tarif "${newType.trim().toUpperCase()}" ajouté`, "success");
+      toast(`Tarif "${VEHICLE_TYPE_LABELS[newType]}" ajouté`, "success");
       setNewType("");
       setNewAmount("");
       loadRates();
@@ -91,14 +92,15 @@ export default function RatesPage() {
 
       <Card title="Ajouter un tarif" className="mb-6">
         <div className="flex items-end gap-3">
-          <div className="flex-1">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Type de véhicule
-            </label>
-            <Input
+          <div className="w-48">
+            <Select
+              id="newType"
+              label="Type de véhicule"
               value={newType}
               onChange={(e) => setNewType(e.target.value)}
-              placeholder="Ex: MOTO, VOITURE, CAMION, BUS"
+              options={["MOTO", "VOITURE", "CAMION", "BUS"]
+                .filter((t) => !rates.find((r) => r.vehicleType === t))
+                .map((t) => ({ value: t, label: VEHICLE_TYPE_LABELS[t] }))}
             />
           </div>
           <div className="w-32">
@@ -112,7 +114,7 @@ export default function RatesPage() {
               placeholder="500"
             />
           </div>
-          <Button onClick={handleAdd} disabled={loading || !newType.trim() || !newAmount}>
+          <Button onClick={handleAdd} disabled={loading || !newAmount}>
             <Plus className="h-4 w-4 mr-1" />
             Ajouter
           </Button>

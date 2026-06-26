@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { VehicleType } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requirePermission, requireTenant, handleApiError } from "@/lib/api-utils";
 import { PERMISSIONS, VEHICLE_TYPE_LABELS } from "@/lib/permissions";
@@ -29,7 +30,7 @@ export async function GET(req: NextRequest) {
           }
         : {}),
       ...(agentId ? { entryAgentId: agentId } : {}),
-      ...(vehicleType ? { vehicleType } : {}),
+      ...(vehicleType ? { vehicleType: vehicleType as VehicleType } : {}),
     };
 
     const tickets = await prisma.ticket.findMany({
