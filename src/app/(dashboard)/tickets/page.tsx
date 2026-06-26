@@ -50,6 +50,7 @@ const paymentBadge = (status: string) => {
 
 export default function TicketsPage() {
   const [data, setData] = useState<PaginatedResponse | null>(null);
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [filters, setFilters] = useState({
@@ -76,15 +77,18 @@ export default function TicketsPage() {
 
   const loadTickets = useCallback(async () => {
     setLoading(true);
+    setError("");
     try {
       const res = await fetch(`/api/tickets?${buildParams()}`);
       const json = await res.json();
       if (res.ok && json.tickets) {
         setData(json);
       } else {
+        setError(json.detail || json.error || "Erreur lors du chargement");
         setData({ tickets: [], total: 0, page: 1, totalPages: 0, limit: 20 });
       }
     } catch {
+      setError("Erreur réseau");
       setData({ tickets: [], total: 0, page: 1, totalPages: 0, limit: 20 });
     }
     setLoading(false);
@@ -160,6 +164,12 @@ export default function TicketsPage() {
           </Button>
         </div>
       </Card>
+
+      {error && (
+        <div className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-600 dark:bg-red-900/30 dark:text-red-400">
+          {error}
+        </div>
+      )}
 
       {loading ? (
         <TableSkeleton rows={10} cols={8} />
