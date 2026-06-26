@@ -79,7 +79,13 @@ export async function GET(req: NextRequest) {
       limit,
     });
   } catch (error) {
-    return handleApiError(error);
+    console.error("=== TICKETS GET ERROR ===");
+    console.error("Message:", error instanceof Error ? error.message : String(error));
+    console.error("Stack:", error instanceof Error ? error.stack : "no stack");
+    return NextResponse.json({
+      error: "Erreur interne",
+      detail: error instanceof Error ? error.message : String(error),
+    }, { status: 500 });
   }
 }
 

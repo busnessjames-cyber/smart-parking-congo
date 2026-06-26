@@ -35,14 +35,17 @@ interface PaginatedResponse {
   limit: number;
 }
 
+const STATUS_LABELS: Record<string, string> = { INSIDE: "Présent", CLOSED: "Terminé" };
+const PAYMENT_LABELS: Record<string, string> = { PAID: "Payé", UNPAID: "Non payé" };
+
 const statusBadge = (status: string) => {
-  if (status === "INSIDE") return <Badge variant="info">{status}</Badge>;
-  return <Badge variant="default">{status}</Badge>;
+  if (status === "INSIDE") return <Badge variant="info">{STATUS_LABELS[status]}</Badge>;
+  return <Badge variant="default">{STATUS_LABELS[status] || status}</Badge>;
 };
 
 const paymentBadge = (status: string) => {
-  if (status === "PAID") return <Badge variant="success">{status}</Badge>;
-  return <Badge variant="danger">{status}</Badge>;
+  if (status === "PAID") return <Badge variant="success">{PAYMENT_LABELS[status]}</Badge>;
+  return <Badge variant="danger">{PAYMENT_LABELS[status] || status}</Badge>;
 };
 
 export default function TicketsPage() {
@@ -73,9 +76,17 @@ export default function TicketsPage() {
 
   const loadTickets = useCallback(async () => {
     setLoading(true);
-    const res = await fetch(`/api/tickets?${buildParams()}`);
-    const json = await res.json();
-    setData(json);
+    try {
+      const res = await fetch(`/api/tickets?${buildParams()}`);
+      const json = await res.json();
+      if (res.ok && json.tickets) {
+        setData(json);
+      } else {
+        setData({ tickets: [], total: 0, page: 1, totalPages: 0, limit: 20 });
+      }
+    } catch {
+      setData({ tickets: [], total: 0, page: 1, totalPages: 0, limit: 20 });
+    }
     setLoading(false);
   }, [buildParams]);
 
@@ -106,8 +117,8 @@ export default function TicketsPage() {
             value={filters.status}
             onChange={(e) => { setFilters({ ...filters, status: e.target.value }); setPage(1); }}
             options={[
-              { value: "INSIDE", label: "INSIDE" },
-              { value: "CLOSED", label: "CLOSED" },
+              { value: "INSIDE", label: "Présent" },
+              { value: "CLOSED", label: "Terminé" },
             ]}
             placeholder="Statut"
           />
