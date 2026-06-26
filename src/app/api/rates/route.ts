@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { VehicleType } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { requirePermission, requireTenant, handleApiError } from "@/lib/api-utils";
+import { requireAuth, requirePermission, requireTenant, handleApiError } from "@/lib/api-utils";
 import { PERMISSIONS } from "@/lib/permissions";
 import { logAudit } from "@/lib/audit";
 import { AuditAction } from "@prisma/client";
@@ -10,7 +10,7 @@ const VALID_VEHICLE_TYPES = Object.values(VehicleType);
 
 export async function GET() {
   try {
-    const user = await requirePermission(PERMISSIONS.MANAGE_RATES);
+    const user = await requireAuth();
     const tenantId = requireTenant(user);
 
     const rates = await prisma.rate.findMany({
