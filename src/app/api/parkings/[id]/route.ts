@@ -9,11 +9,21 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   try {
     const user = await requireRole([Role.SUPER_ADMIN]);
     const { id } = await params;
-    const { isActive } = await req.json();
+    const body = await req.json();
+
+    const data: Record<string, unknown> = {};
+    if (body.isActive !== undefined) data.isActive = body.isActive;
+    if (body.name !== undefined) data.name = body.name;
+    if (body.address !== undefined) data.address = body.address;
+    if (body.city !== undefined) data.city = body.city;
+
+    if (Object.keys(data).length === 0) {
+      return NextResponse.json({ error: "Aucune donnée à mettre à jour" }, { status: 400 });
+    }
 
     const parking = await prisma.parking.update({
       where: { id },
-      data: { isActive },
+      data,
     });
 
     await logAudit({
@@ -22,7 +32,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       action: AuditAction.UPDATE_PARKING,
       entityType: "Parking",
       entityId: parking.id,
-      details: { isActive, name: parking.name },
+      details: data,
     });
 
     return NextResponse.json(parking);

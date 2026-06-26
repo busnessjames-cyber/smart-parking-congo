@@ -19,8 +19,11 @@ interface Rate {
 export default function RatesPage() {
   const [rates, setRates] = useState<Rate[]>([]);
   const [editing, setEditing] = useState<Record<string, number>>({});
-  const [newType, setNewType] = useState("MOTO");
+  const [newType, setNewType] = useState("");
   const [newAmount, setNewAmount] = useState("");
+
+  const ALL_TYPES = ["MOTO", "VOITURE", "CAMION", "BUS"];
+  const availableTypes = ALL_TYPES.filter((t) => !rates.find((r) => r.vehicleType === t));
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
@@ -35,7 +38,15 @@ export default function RatesPage() {
       });
   };
 
-  useEffect(() => { loadRates(); }, []);
+  useEffect(() => {
+    loadRates();
+  }, []);
+
+  useEffect(() => {
+    if (availableTypes.length > 0 && !availableTypes.includes(newType)) {
+      setNewType(availableTypes[0]);
+    }
+  }, [rates]);
 
   const handleSave = async (vehicleType: string) => {
     await fetch("/api/rates", {
@@ -90,36 +101,40 @@ export default function RatesPage() {
         future ne modifie pas les tickets existants.
       </p>
 
-      <Card title="Ajouter un tarif" className="mb-6">
-        <div className="flex items-end gap-3">
-          <div className="w-48">
-            <Select
-              id="newType"
-              label="Type de véhicule"
-              value={newType}
-              onChange={(e) => setNewType(e.target.value)}
-              options={["MOTO", "VOITURE", "CAMION", "BUS"]
-                .filter((t) => !rates.find((r) => r.vehicleType === t))
-                .map((t) => ({ value: t, label: VEHICLE_TYPE_LABELS[t] }))}
-            />
+      {availableTypes.length > 0 ? (
+        <Card title="Ajouter un tarif" className="mb-6">
+          <div className="flex items-end gap-3">
+            <div className="w-48">
+              <Select
+                id="newType"
+                label="Type de véhicule"
+                value={newType}
+                onChange={(e) => setNewType(e.target.value)}
+                options={availableTypes.map((t) => ({ value: t, label: VEHICLE_TYPE_LABELS[t] }))}
+              />
+            </div>
+            <div className="w-32">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Montant (FCFA)
+              </label>
+              <Input
+                type="number"
+                value={newAmount}
+                onChange={(e) => setNewAmount(e.target.value)}
+                placeholder="500"
+              />
+            </div>
+            <Button onClick={handleAdd} disabled={loading || !newAmount}>
+              <Plus className="h-4 w-4 mr-1" />
+              Ajouter
+            </Button>
           </div>
-          <div className="w-32">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Montant (FCFA)
-            </label>
-            <Input
-              type="number"
-              value={newAmount}
-              onChange={(e) => setNewAmount(e.target.value)}
-              placeholder="500"
-            />
-          </div>
-          <Button onClick={handleAdd} disabled={loading || !newAmount}>
-            <Plus className="h-4 w-4 mr-1" />
-            Ajouter
-          </Button>
-        </div>
-      </Card>
+        </Card>
+      ) : (
+        <p className="mb-6 text-sm text-gray-500 dark:text-gray-400">
+          Tous les types de véhicules ont déjà un tarif configuré.
+        </p>
+      )}
 
       <div className="grid gap-4 md:grid-cols-2">
         {rates.map((rate) => (

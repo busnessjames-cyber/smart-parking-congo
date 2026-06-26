@@ -8,7 +8,7 @@ import { Modal } from "@/components/ui/modal";
 import { Badge } from "@/components/ui/badge";
 import { TableSkeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/lib/use-toast";
-import { Plus, Building2 } from "lucide-react";
+import { Plus, Edit3, Trash2, Building2 } from "lucide-react";
 
 interface Parking {
   id: string;
@@ -35,7 +35,9 @@ export default function SuperAdminPage() {
   const [parkings, setParkings] = useState<Parking[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [editParking, setEditParking] = useState<Parking | null>(null);
   const [form, setForm] = useState(defaultForm);
+  const [editForm, setEditForm] = useState({ name: "", address: "", city: "" });
   const [error, setError] = useState("");
   const { toast } = useToast();
 
@@ -76,6 +78,42 @@ export default function SuperAdminPage() {
     loadParkings();
   };
 
+  const handleEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editParking) return;
+
+    const res = await fetch(`/api/parkings/${editParking.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(editForm),
+    });
+
+    if (res.ok) {
+      toast(`Parking "${editForm.name}" modifié`, "success");
+      setEditParking(null);
+      loadParkings();
+    } else {
+      const data = await res.json();
+      toast(data.error || "Erreur", "error");
+    }
+  };
+
+  const handleDelete = async (parking: Parking) => {
+    if (!confirm(`Supprimer le parking "${parking.name}" ? Toutes les données seront désactivées.`)) return;
+
+    const res = await fetch(`/api/parkings/${parking.id}`, {
+      method: "DELETE",
+    });
+
+    if (res.ok) {
+      toast(`Parking "${parking.name}" désactivé`, "success");
+      loadParkings();
+    } else {
+      const data = await res.json();
+      toast(data.error || "Erreur", "error");
+    }
+  };
+
   return (
     <div>
       <div className="mb-8 flex items-center justify-between">
@@ -113,6 +151,17 @@ export default function SuperAdminPage() {
         </form>
       </Modal>
 
+      <Modal open={!!editParking} onClose={() => setEditParking(null)} title="Modifier le parking">
+        {editParking && (
+          <form onSubmit={handleEdit} className="grid gap-4">
+            <Input label="Nom" value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} required />
+            <Input label="Adresse" value={editForm.address} onChange={(e) => setEditForm({ ...editForm, address: e.target.value })} />
+            <Input label="Ville" value={editForm.city} onChange={(e) => setEditForm({ ...editForm, city: e.target.value })} />
+            <Button type="submit" className="w-full">Enregistrer</Button>
+          </form>
+        )}
+      </Modal>
+
       {loading ? (
         <TableSkeleton rows={5} cols={6} />
       ) : (
@@ -126,6 +175,7 @@ export default function SuperAdminPage() {
                 <th className="px-4 py-3 text-left font-medium text-gray-500 dark:text-gray-400">Utilisateurs</th>
                 <th className="px-4 py-3 text-left font-medium text-gray-500 dark:text-gray-400">Tickets</th>
                 <th className="px-4 py-3 text-left font-medium text-gray-500 dark:text-gray-400">Statut</th>
+                <th className="px-4 py-3 text-left font-medium text-gray-500 dark:text-gray-400">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
@@ -160,6 +210,27 @@ export default function SuperAdminPage() {
                     >
                       {p.isActive ? "Actif" : "Inactif"}
                     </button>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => {
+                          setEditParking(p);
+                          setEditForm({ name: p.name, address: p.address || "", city: p.city || "" });
+                        }}
+                        className="rounded-lg p-1.5 text-gray-500 hover:bg-gray-100 hover:text-primary-600 dark:hover:bg-gray-800 dark:hover:text-primary-400"
+                        title="Modifier"
+                      >
+                        <Edit3 className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(p)}
+                        className="rounded-lg p-1.5 text-gray-500 hover:bg-gray-100 hover:text-red-600 dark:hover:bg-gray-800 dark:hover:text-red-400"
+                        title="Supprimer"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
